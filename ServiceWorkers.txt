@@ -35,22 +35,22 @@ Service workers:
             Para recicla-lo basta navegar para uma página que tenha o escopo
             diferente do service worker ou recarregar com shift + F5.
 
-        respondendo a uma interceptação do service worker:
+    Respondendo a uma interceptação do service worker:
 
-            self.addEventListener('fetch', function(event){
+        self.addEventListener('fetch', function(event){
+            event.respondWith(
+                new Response("<h1 class=\"a-winner-is-me\">Resposta</h1>", {
+                    headers:{"Content-Type": "text/html;charset=UTF8"}
+                })
+            )
+        })
+
+    Interceptando todos os .jpg e devolvendo um .gif:
+        self.addEventListener('fetch', function(event){
+            if(event.request.url.endsWith('.jpg')){
                 event.respondWith(
-                    new Response("<h1 class=\"a-winner-is-me\">Resposta</h1>", {
-                        headers:{"Content-Type": "text/html;charset=UTF8"}
-                    })
+                    fetch('/imgs/dr-evil.gif')
                 )
-            })
-
-        interceptando todos os .jpg e devolvendo um .gif:
-            self.addEventListener('fetch', function(event){
-                if(event.request.url.endsWith('.jpg')){
-                    event.respondWith(
-                        fetch('/imgs/dr-evil.gif')
-                    )
-                }
-            })
+            }
+        })
 
