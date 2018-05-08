@@ -1,0 +1,47 @@
+Offline App and sites
+
+Service workers:
+    funcionam como um proxy entre o servidor e a aplicação,
+    interceptando requisições, criação efetiva de experiência
+    offline, atualizando conteúdo no servidor, acesso a push
+    notifications e sincronizando apis em segundo plano.
+
+    Criando e registrando um service worker:
+
+        crie um arquivo /sw/index.js: 
+            Por padrão o escopo do service worker é o domínio.
+
+            self.addEventListener('fetch', function(event){
+                console.log(event.request);
+            });
+        
+        chamando da página do site:
+            <script>
+                if('serviceWorker' in navigator){
+                    window.addEventListener('load', function(){
+                        navigator.serviceWorker.register('/sw.js')
+                        .then(function(){
+                            console.log('Service Worker registered!');
+                        }).catch(function(){
+                            console.log('Registration failed')
+                        });
+                    });
+                }
+            </script>
+
+            o ciclo de vida do service worker é diferente do da página,
+            ele materá enquanto o escopo for o mesmo.
+
+            Para recicla-lo basta navegar para uma página que tenha o escopo
+            diferente do service worker ou recarregar com shift + F5.
+
+        respondendo a uma interceptação do service worker:
+        
+            self.addEventListener('fetch', function(event){
+                event.respondWith(
+                    new Response("<h1 class=\"a-winner-is-me\">Resposta</h1>", {
+                        headers:{"Content-Type": "text/html;charset=UTF8"}
+                    })
+                )
+            })
+
