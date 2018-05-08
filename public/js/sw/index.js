@@ -1,10 +1,16 @@
 self.addEventListener('fetch', function(event){
 
-    event.respondWith(
+   /* event.respondWith(
         new Response('<h1 class="a-winner-is-me">Resposta</h1>', {
             headers:{
                 "Content-Type": "text/html"            }
         })
-    )
-    //console.log(event.request);
+    )*/
+
+    if(event.request.url.endsWith('.jpg')){
+        event.respondWith(
+            fetch('/imgs/dr-evil.gif')
+        )
+    }
+    
 });

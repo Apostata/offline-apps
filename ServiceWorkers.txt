@@ -36,12 +36,21 @@ Service workers:
             diferente do service worker ou recarregar com shift + F5.
 
         respondendo a uma interceptação do service worker:
-        
+
             self.addEventListener('fetch', function(event){
                 event.respondWith(
                     new Response("<h1 class=\"a-winner-is-me\">Resposta</h1>", {
                         headers:{"Content-Type": "text/html;charset=UTF8"}
                     })
                 )
+            })
+
+        interceptando todos os .jpg e devolvendo um .gif:
+            self.addEventListener('fetch', function(event){
+                if(event.request.url.endsWith('.jpg')){
+                    event.respondWith(
+                        fetch('/imgs/dr-evil.gif')
+                    )
+                }
             })
 
