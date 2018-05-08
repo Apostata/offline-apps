@@ -1,16 +1,14 @@
 self.addEventListener('fetch', function(event){
-
-   /* event.respondWith(
-        new Response('<h1 class="a-winner-is-me">Resposta</h1>', {
-            headers:{
-                "Content-Type": "text/html"            }
+    event.respondWith(
+        fetch(event.request)
+        .then(function(response){
+            if(response.status === 404){
+                return fetch('/imgs/dr-evil.gif')
+            }
+            return response;    
         })
-    )*/
-
-    if(event.request.url.endsWith('.jpg')){
-        event.respondWith(
-            fetch('/imgs/dr-evil.gif')
-        )
-    }
-    
+        .catch(function(){
+            return new Response("Falha geral")
+        })
+    )    
 });
