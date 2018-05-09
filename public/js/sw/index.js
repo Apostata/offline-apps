@@ -1,3 +1,4 @@
+var staticCacheName = 'wittr-static-v1';
 self.addEventListener('install', function(event){
     var urlsToCache = [
         '/',
@@ -8,9 +9,24 @@ self.addEventListener('install', function(event){
         'https://fonts.gstatic.com/s/roboto/v15/d-6IYplOFocCacKzxwXSOD8E0i7KZn-EPnyo3HZu7kw.woff'
     ];
     event.waitUntil(
-        caches.open('wittr-static-v1')
+        caches.open(staticCacheName)
         .then(function(cache){
             return cache.addAll(urlsToCache);
+        })
+    )
+});
+
+self.addEventListener('activate', function(event){ //assim que terminar a instalação
+    event.waitUntil(
+        caches.keys().then(function(cacheNames){
+            return Promise.all(
+                cacheNames.filter(function(cacheName){
+                    return cacheName.startsWith('wttr-') && 
+                    cacheName != staticCacheName;
+                }).map(function(cacheName){
+                    return cache.delete(cacheName)
+                })
+            );
         })
     )
 });
@@ -27,3 +43,4 @@ self.addEventListener('fetch', function(event){ //intercepta todas requisições
        })
     )    
 });
+

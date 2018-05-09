@@ -69,6 +69,12 @@ IndexController.prototype._openSocket = function() {
   });
 };
 
+IndexController.prototype._updateReady = function(){
+  var toast = this._toastsView.show("New version available", {
+    buttons: ['whatever']
+  })
+};
+
 // called when the web socket sends message data
 IndexController.prototype._onSocketMessage = function(data) {
   var messages = JSON.parse(data);

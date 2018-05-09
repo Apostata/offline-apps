@@ -46,6 +46,7 @@ Service workers:
         })
 
     Interceptando todos os .jpg e devolvendo um .gif:
+
         self.addEventListener('fetch', function(event){
             if(event.request.url.endsWith('.jpg')){
                 event.respondWith(
@@ -54,3 +55,86 @@ Service workers:
             }
         })
 
+    verificando o cache:
+     self.addEventListener('activate', function(event){ //assim que terminar a instalação
+        event.waitUntil(
+            caches.keys().then(function(cacheNames){
+                return Promise.all(
+                    cacheNames.filter(function(cacheName){
+                        return cacheName.startsWith('wttr-') && 
+                        cacheName != staticCacheName;
+                    }).map(function(cacheName){
+                        return cache.delete(cacheName)
+                    })
+                );
+            })
+        )
+    });
+    
+    Status dos service Workers:
+        ao se registrar um service worker ele retornará uma promise
+        com alguns métodos e propriedades:
+
+        navigator.serviceWorker.register('/sw.js')
+        .then(function(reg){
+            reg.unregister();
+            reg.update();
+            reg.installing;
+            reg.waiting;
+            reg.active;
+        })
+
+        installing  : sendo instalado mas não completou a instalação,
+        installed   : está instalado mas ainda não está ativo  
+        activating  : está sendo ativado,
+        activated   : pronto para receber eventos,
+        redundant   : foi descartado,substituido por outro ou falhou
+        ao ser instalado
+
+        sempre que uma propriedado do estado muda o service worker
+        dispara um evendo 'statechange'
+
+       
+
+    Verificando se há atulizações:
+        if(!navigator.serviceWorker.controller){
+            // página carregou sem usar um serviceWorker,
+            // carregando o conteúdo da rede
+        }
+
+        Caso não tenha carregado o conteúdo da rede:
+
+            navigator.serviceWorker.register('/sw.js')
+                .then(function(reg){
+
+                // se tem um worker em waiting, tem atualização
+                    if(reg.waiting){
+                        // tem um update pronto!
+                    }
+               
+
+            ...
+                // se tem um worker em instaling, tem atualização em progresso
+                //precisa verificar quando mudar de estado e o estado
+                //for installed para confirmar se a atualização não falhou
+                    
+                    if(reg.installing){
+                        // tem um update en progresso
+                        reg.installing.addEventListener('statechange', function(){
+                            if(this.state === "installed"){
+                                // tem um update pronto!
+                            }
+                        })
+                    }
+
+            ...
+                // se tem um update, ver se o instado é installed
+                reg.addEventListener('updatefound', function(){
+                    reg.installing.addEventListener('statechange', function(){
+                        if(this.state === 'installed'){
+                            // tem um update pronto!
+                        }
+                    })
+                })
+        
+        
