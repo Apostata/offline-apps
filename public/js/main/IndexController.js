@@ -1,6 +1,7 @@
 import PostsView from './views/Posts';
 import ToastsView from './views/Toasts';
 import idb from 'idb';
+import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
 
 export default function IndexController(container) {
   this._container = container;
@@ -9,20 +10,77 @@ export default function IndexController(container) {
   this._lostConnectionToast = null;
   this._openSocket();
   this._registerServiceWorker();
-}
+};
+
+
+IndexController.prototype._listenInstalling = function(worker){
+
+  var indexController = this;
+  worker.addEventListener('statechange', function(){ // aguarda uma mudança de estado
+    if(worker.state === "installed"){ //vefificar se mudou de estado par instalado
+      indexController._updateReady(worker);
+    }
+  });
+};
+
+IndexController.prototype._sendUpdateMessage = function(reg, message){
+  reg.postMessage({action: message});
+};
+//TODO: listener para mudança de controller (worker) e recarregar a página
 
 IndexController.prototype._registerServiceWorker = function(){
-  if('serviceWorker' in navigator){
-    window.addEventListener('load', function(){
+  var indexController = this;
+  
+  window.addEventListener('load', function(){
       navigator.serviceWorker.register('/sw.js')
-      .then(function(){
-        console.log('Service Worker registered!');
+      .then(function(reg){
+
+        if(!navigator.serviceWorker.controller){
+          return;
+        }
+
+        if(reg.waiting){ //se está aghuardando significa que tem update
+          console.log('reg waiting');
+          indexController._updateReady(reg.waiting);
+          return
+        }
+
+        if(reg.installing){ //se está instalando ...
+          console.log('reg installing');
+          indexController._listenInstalling(reg.installing);
+          return;
+        }
+
+        reg.addEventListener("updatefound", function(){
+          console.log('update found');
+          indexController._listenInstalling(reg);
+          return;
+        });
+
       }).catch(function(){
         console.log('Registration failed')
       });
     });
-  }
-}
+
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      console.log('new service worker controller');
+      window.location.reload();
+    });
+};
+
+IndexController.prototype._updateReady = function(worker){
+  var indexController = this;
+
+  var toast = this._toastsView.show("New version available", {
+    buttons: ['refresh', 'dismiss']
+  });
+
+  toast.answer.then(function(answer){
+      if(answer != 'refresh') return;
+      indexController._sendUpdateMessage(worker, answer);
+      //TODO: dizer para o Service worker para Pular a espera
+  });
+};
 
 // open a connection to the server for live updates
 IndexController.prototype._openSocket = function() {
@@ -67,12 +125,6 @@ IndexController.prototype._openSocket = function() {
       indexController._openSocket();
     }, 5000);
   });
-};
-
-IndexController.prototype._updateReady = function(){
-  var toast = this._toastsView.show("New version available", {
-    buttons: ['whatever']
-  })
 };
 
 // called when the web socket sends message data

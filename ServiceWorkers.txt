@@ -136,5 +136,31 @@ Service workers:
                         }
                     })
                 })
+    
+    Trocando Mensagens com o Service worker:
+
+        Da página par ao worker:
+            navigator.serviceWorker.register('/sw.js')
+            .then(function(reg){
+                
+                reg.instaling.postMessage({foo: "bar"});
+
+            })
         
-        
+        Recebendo Mensagem no worker:
+            self.addEventListener('message', function(event){
+                console.log(event.data) // {foo: "bar"}
+            });
+    
+    Vefificar se há mudança no serviceWorker:
+
+        navigator.serviceWorker.addEventListener('controllerchange', function(){
+            // mudou de serviceWorker
+        });
+
+    Atualizar para o serviceWorker novo:
+        dentro do código do worker:
+
+            ...
+            self.skipWaiting();
+            
