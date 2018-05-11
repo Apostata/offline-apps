@@ -1,0 +1,135 @@
+Offline App and sites
+    IndexDB:
+        banco de dados similar aos não relacionais, fica no browser.
+
+        para facilitar as promisses usar a library: IndexDB Promised
+
+
+        
+        Criando o banco:
+            var dbPromise = idb.open('test-db', 1, function(upgradDb){
+                var keyValStore = upgradDb.createObjectStore('keyval');
+
+                keyValStore.put('world', 'hello'); // (valor, key)
+            });
+
+            foi criado o banco 'test-db' versão 1 com um callback que adiciona
+            um indice(hello) e seu valor(world) ao banco; 
+
+        Demais operações:
+            é necessário abrir uma transação com o nome da store(tabela) que você deseja manipular
+            podendo ser mais de uma: 
+                db.transaction('keyval')
+
+            Exemplo de uso:
+                dbPromise.then(function(db){
+                    var tx = db.transaction('people');
+                    var peopleStore = tx.objectStore('people');
+                    return peopleStore.get('Rene Souza');
+
+                }).then(function(val){
+                    console.log(val);
+                });
+                
+
+        Atualizando o  banco: 
+            uma vez que você tenha criao o banco, para adicionar uma tabela
+            será necessário mudar a versão do banco:
+
+             var dbPromise = idb.open('test-db', 2, function(upgradDb){
+                switch(upgradDb.oldVersion){
+                    case 0:
+                        var keyValStore = upgradDb.createObjectStore('keyval');
+                        keyValStore.put('world', 'hello'); // (valor, key)
+                    case 1:
+                        upgradDb.createObjectStore('people', {keyPath: "name"});
+                }
+            });
+            
+            na tabela people foi definido ainda que 'name' é chave primária da tabela
+
+
+
+        Lendo itens do banco:
+            dbPromise.then(function(db){ //lendo
+                var tx = db.transaction('storesample');
+                var storeSample = tx.objectStore('storesample');
+                return storeSample.get('chave');
+
+            }).then(function(val){
+                console.log(val);
+            });
+
+            return storeSample.get('name'); //pega o valor da chave name
+            return storeSample.getAll();  //pega todo o objeto de toda tabela 
+            return storeSample.getAll('cat');  //pega todo o objeto de do indice
+                com o valor 'cat'
+            
+
+
+        Adicionando Itens ao banco:
+            dbPromise.then(function(db){ 
+                var tx = db.transaction('keyval', 'readwrite');
+                var keyValStore = tx.objectStore('keyval');
+                keyValStore.put('foo', 'bar'); // (valor, key)
+                return tx.complete;
+            }).then(function(){
+                console.log('Adicionando foo:bar à storage keyval');
+            });
+
+        Indexando por outra chave:
+            var dbPromise = idb.open('test-db', 3, function(upgradDb){
+                switch(upgradDb.oldVersion){
+
+                    ...
+
+                    case 2:
+                        var peopleStore = upgradDb.transaction.objectStore('people');
+                        peopleStore = peopleStore.createIndex('animal', 'favoriteAnimal');
+
+            
+            Mudar a versão do banco para reindexar com a nova chave passando o apelido 'animal'
+            para a chave 'favoriteAnimal'
+
+            consulta na nova chave:
+                dbPromise.then(function(db){
+                    var tx = db.transaction('people');
+                    var peopleStore = tx.objectStore('people');
+                    var animalindex = peopleStore.index('animal');
+
+                    return peopleStore.getAll();
+                }).then(function(people){
+                    console.log('People:', people);
+                });
+        
+        Cursor:
+            Lendo item por item:
+
+                dbPromise.then(function(db){
+                    var tx = db.transaction('people');
+                    var peopleStore = tx.objectStore('people');
+
+                    return peopleStore.openCursor();
+
+                }).then(function logPerson(cursor){
+                    if(!cursor) return;
+
+                    console.log('Cursor em: ', cursor.value.name);
+                    return cursor.continue().then(logPerson);
+
+                }).then(function(){
+                    console.log('lista finalizada!');
+                });
+
+                // peopleStore.openCursor() = inicia o cursor
+                //na promise resultante passa um função usada recursivamente
+                até que tenha lido todos os itens
+            
+            Removendo item:
+                cursor.delete()
+
+            Alterando item:
+                cursor.update(newValue)
+            
+            Avançando 2 itens:
+                cursor.advance(2)
